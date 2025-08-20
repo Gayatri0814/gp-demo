@@ -15,7 +15,7 @@
 
     body {
       display: flex;
-      background: #faf6f2;
+      background: #f9f9f9;
       color: #333;
       height: 100vh;
     }
@@ -23,9 +23,10 @@
     /* Sidebar */
     .sidebar {
       width: 250px;
-      background: #fffaf7;
-      border-right: 1px solid #ddd;
+      background: #ffffff;
+      border-right: 1px solid #eee;
       padding: 20px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
     }
 
     .sidebar-header {
@@ -34,12 +35,13 @@
       font-size: 20px;
       font-weight: bold;
       margin-bottom: 30px;
-      border-bottom: 2px solid #d93025;
-      padding-bottom: 5px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3b82f6;
+      color: #3b82f6;
     }
 
     .sidebar-header i {
-      font-size: 24px;
+      font-size: 22px;
       margin-right: 10px;
       cursor: pointer;
     }
@@ -49,72 +51,70 @@
     }
 
     .menu li {
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.2s;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .menu li a {
+      text-decoration: none;
+      color: #333;
+      margin-left: 6px;
     }
 
     .menu li:hover {
-      background: #f3ece7;
+      background: #f0f7ff;
+      color: #3b82f6;
+    }
+
+    .menu li:hover a {
+      color: #3b82f6;
     }
 
     /* Main Content */
     .main {
       flex: 1;
       padding: 30px;
+      overflow-y: auto;
     }
 
-    .main-header {
+    /* Add Task (+ Button only) */
+    .task-input-container {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: center;
       margin-bottom: 20px;
     }
 
-    .main-header h2 {
-      font-size: 24px;
-    }
-
-    /* Add Task */
-    .add-task {
-      display: flex;
-      margin-top: 20px;
-    }
-
-    .add-task input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      outline: none;
-    }
-
-    .add-task button {
-      padding: 10px 15px;
-      margin-left: 10px;
+    .add-btn {
+      background: #3b82f6;
       border: none;
-      background: #d93025;
       color: #fff;
-      font-weight: bold;
-      border-radius: 6px;
+      padding: 12px 18px;
+      border-radius: 50%;
       cursor: pointer;
+      transition: background 0.3s;
+      font-size: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .add-btn:hover {
+      background: #2563eb;
     }
 
     /* Task List */
     #taskList {
-      margin-top: 20px;
       list-style: none;
       padding: 0;
     }
 
     #taskList li {
       background: #fff;
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -122,25 +122,65 @@
 
     .task-text {
       font-size: 16px;
+      color: #444;
     }
 
     .task-actions button {
       margin-left: 10px;
       border: none;
-      padding: 6px 10px;
-      border-radius: 5px;
+      padding: 8px 12px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      transition: background 0.3s;
     }
 
     .complete-btn {
-      background: #34a853;
+      background: #10b981;
       color: white;
+    }
+    .complete-btn:hover {
+      background: #059669;
     }
 
     .remove-btn {
-      background: #d93025;
+      background: #ef4444;
       color: white;
+    }
+    .remove-btn:hover {
+      background: #dc2626;
+    }
+
+    /* Upcoming Task Section */
+    .upcoming-section {
+      margin-top: 40px;
+    }
+
+    .upcoming-section h2 {
+      color: #3b82f6;
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #eee;
+      padding: 12px;
+      text-align: center;
+      font-size: 15px;
+    }
+
+    th {
+      background: #f0f7ff;
+      color: #3b82f6;
     }
   </style>
 </head>
@@ -151,50 +191,62 @@
       <i>☰</i> My Tasks
     </div>
    <ul class="menu">
-     <li id="addTaskBtn"><i class="fa fa-plus"></i><a href="dashboard.html"> Add Task</a> </li>
-     <li><i class="fa fa-search"></i><a href="search.html"> Search</a></li>
      <li><i class="fa fa-inbox"></i><a href="inbox.html"> Inbox</a></li>
      <li><i class="fa fa-calendar-day"></i><a href="dashboard.html"> Today</a></li>
      <li><i class="fa fa-calendar"></i><a href="#" onclick="showUpcoming()"> Upcoming</a></li>
    </ul>
   </div>
 
-  <script>
-    const taskInput = document.getElementById("taskInput");
-    const taskInputArea = document.getElementById("taskInputArea");
-    const taskList = document.getElementById("taskList");
-    const pageTitle = document.getElementById("pageTitle");
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Add Task Button -->
+    <div class="task-input-container">
+      <button class="add-btn" onclick="addTask()">+</button>
+    </div>
 
+    <!-- Today Task List -->
+    <h2>Today's Tasks</h2>
+    <ul id="taskList"></ul>
+
+    <!-- Upcoming Task Table -->
+    <div class="upcoming-section">
+      <h2>Upcoming Task</h2>
+      <table id="upcomingTable">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Date</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const taskList = document.getElementById("taskList");
+    const upcomingTableBody = document.querySelector("#upcomingTable tbody");
     let tasks = [];
 
-    // Add task
+    // Add task with prompt
     function addTask() {
-      const taskText = taskInput.value.trim();
-      if (taskText) {
-        tasks.push({ text: taskText, completed: false });
-        taskInput.value = "";
-        renderTasks();
-      }
-    }
+      const text = prompt("Enter your task:");
+      if (!text) return;
 
-    // Toggle complete
-    function toggleComplete(index) {
-      tasks[index].completed = !tasks[index].completed;
+      const date = prompt("Enter date (YYYY-MM-DD):", new Date().toISOString().split("T")[0]);
+      const time = prompt("Enter time (HH:MM):", new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+
+      const task = { text, date, time, completed: false };
+      tasks.push(task);
       renderTasks();
+      renderUpcoming();
     }
 
-    // Remove task
-    function removeTask(index) {
-      tasks.splice(index, 1);
-      renderTasks();
-    }
-
-    // Render tasks
-    function renderTasks(showUpcomingOnly = false) {
+    // Render today's tasks
+    function renderTasks() {
       taskList.innerHTML = "";
       tasks.forEach((task, index) => {
-        if (showUpcomingOnly && task.completed) return; // only pending
-
         const li = document.createElement("li");
         li.innerHTML = `
           <span class="task-text">${task.text} ${task.completed ? "(Completed)" : ""}</span>
@@ -207,11 +259,37 @@
       });
     }
 
-    // Show upcoming (pending only, hide add input)
+    // Render upcoming tasks in table
+    function renderUpcoming() {
+      upcomingTableBody.innerHTML = "";
+      tasks.filter(t => !t.completed).forEach(task => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${task.text}</td>
+          <td>${task.date}</td>
+          <td>${task.time}</td>
+        `;
+        upcomingTableBody.appendChild(tr);
+      });
+    }
+
+    // Toggle complete
+    function toggleComplete(index) {
+      tasks[index].completed = !tasks[index].completed;
+      renderTasks();
+      renderUpcoming();
+    }
+
+    // Remove task
+    function removeTask(index) {
+      tasks.splice(index, 1);
+      renderTasks();
+      renderUpcoming();
+    }
+
+    // Show upcoming (scrolls down)
     function showUpcoming() {
-      pageTitle.textContent = "Upcoming";
-      taskInputArea.style.display = "none"; // hide add task input
-      renderTasks(true);
+      document.querySelector(".upcoming-section").scrollIntoView({ behavior: "smooth" });
     }
   </script>
 </body>
