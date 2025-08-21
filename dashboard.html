@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Tasks</title>
@@ -56,7 +57,16 @@
     .task-actions { display:flex; gap:8px; }
 
     /* Hide sections initially */
-    #upcomingSection { display:none; }
+    #upcomingSection, #analysisSection { display:none; }
+
+    /* Analysis Section */
+    .analysis-container { display:flex; gap:20px; margin-bottom:30px; }
+    .analysis-card { flex:1; background:#fff; border-radius:12px; padding:20px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.1); transition:0.3s; }
+    .analysis-card h3 { font-size:20px; margin-bottom:10px; }
+    .analysis-card p { font-size:28px; font-weight:bold; color:#3b82f6; }
+    .analysis-card:hover { transform:translateY(-5px); }
+
+    .chart-container { background:#fff; border-radius:12px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); max-width:500px; margin:auto; }
   </style>
 </head>
 <body>
@@ -64,9 +74,9 @@
   <div class="sidebar">
     <div class="sidebar-header"><i>☰</i> To Do List</div>
     <ul class="menu">
-      <li onclick="showCategory()"><i class="fa fa-inbox"></i><a href="#"> Inbox</a></li>
-      <li onclick="showCategory()"><i class="fa fa-calendar-day"></i><a href="#"> Today</a></li>
+      <li onclick="showCategory()"><i class="fa fa-home"></i><a href="#"> Home</a></li>
       <li onclick="showUpcoming()"><i class="fa fa-calendar-alt"></i><a href="#"> Upcoming</a></li>
+      <li onclick="showAnalysis()"><i class="fa fa-chart-pie"></i><a href="#"> Analysis</a></li>
     </ul>
   </div>
 
@@ -126,10 +136,32 @@
         <div class="task-list" id="upcomingList"></div>
       </div>
     </div>
+
+    <!-- Analysis Section -->
+    <div id="analysisSection">
+      <div class="analysis-container">
+        <div class="analysis-card">
+          <h3>Total Tasks</h3>
+          <p id="totalTasks">0</p>
+        </div>
+        <div class="analysis-card">
+          <h3>Completed</h3>
+          <p id="completedTasks">0</p>
+        </div>
+        <div class="analysis-card">
+          <h3>Pending</h3>
+          <p id="pendingTasks">0</p>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="taskChart"></canvas>
+      </div>
+    </div>
   </div>
 
 <script>
   const tasks = { work: [], personal: [], shopping: [], health: [] };
+  let chart;
 
   function toggleInput(type) {
     const box = document.getElementById(type+"InputBox");
@@ -147,18 +179,21 @@
     input.value="";
     renderTasks(type);
     renderUpcoming();
+    updateAnalysis();
   }
 
   function toggleTask(type, i) {
     tasks[type][i].completed = !tasks[type][i].completed;
     renderTasks(type);
     renderUpcoming();
+    updateAnalysis();
   }
 
   function removeTask(type, i) {
     tasks[type].splice(i,1);
     renderTasks(type);
     renderUpcoming();
+    updateAnalysis();
   }
 
   function renderTasks(type) {
@@ -197,6 +232,63 @@
     }
   }
 
+  function updateAnalysis(){
+    let total=0,completed=0,pending=0;
+    const categoryCounts = { work:0, personal:0, shopping:0, health:0 };
+    for(const type in tasks){
+      tasks[type].forEach(task=>{
+        total++;
+        if(task.completed) completed++; else pending++;
+        categoryCounts[type]++;
+      });
+    }
+    document.getElementById("totalTasks").innerText=total;
+    document.getElementById("completedTasks").innerText=completed;
+    document.getElementById("pendingTasks").innerText=pending;
+
+    updateChart(categoryCounts);
+  }
+
+  function updateChart(categoryCounts){
+    const ctx = document.getElementById('taskChart').getContext('2d');
+    const labels = ["Work","Personal","Shopping","Health"];
+    const data = [
+      categoryCounts.work,
+      categoryCounts.personal,
+      categoryCounts.shopping,
+      categoryCounts.health
+    ];
+    const colors = ["#899cf7","#f1ad88","#1b7205","#f75e5e"];
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: colors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ position:"bottom" },
+          tooltip:{
+            callbacks:{
+              label: function(context){
+                const total = context.dataset.data.reduce((a,b)=>a+b,0);
+                const value = context.raw;
+                const percentage = total ? ((value/total)*100).toFixed(1) : 0;
+                return `${context.label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
   function searchTask(){
     const query=document.getElementById("searchInput").value.toLowerCase();
     for(const type in tasks){
@@ -223,16 +315,32 @@
   document.getElementById("searchInput").addEventListener("input",searchTask);
 
   // Show/Hide sections
-  function showUpcoming(){
-    document.getElementById("categorySection").style.display="none";
-    document.getElementById("upcomingSection").style.display="block";
-    document.getElementById("pageTitle").innerText="Upcoming";
-  }
-  function showCategory(){
-    document.getElementById("categorySection").style.display="grid";
-    document.getElementById("upcomingSection").style.display="none";
-    document.getElementById("pageTitle").innerText="Category";
-  }
+  // Show/Hide sections
+function showUpcoming(){
+  document.getElementById("categorySection").style.display="none";
+  document.getElementById("upcomingSection").style.display="block";
+  document.getElementById("analysisSection").style.display="none";
+  document.getElementById("pageTitle").innerText="Upcoming";
+  document.querySelector(".search-container").style.display = "none"; // hide search
+}
+
+function showCategory(){
+  document.getElementById("categorySection").style.display="grid";
+  document.getElementById("upcomingSection").style.display="none";
+  document.getElementById("analysisSection").style.display="none";
+  document.getElementById("pageTitle").innerText="Category";
+  document.querySelector(".search-container").style.display = "flex"; // show search
+}
+
+function showAnalysis(){
+  document.getElementById("categorySection").style.display="none";
+  document.getElementById("upcomingSection").style.display="none";
+  document.getElementById("analysisSection").style.display="block";
+  document.getElementById("pageTitle").innerText="Analysis";
+  document.querySelector(".search-container").style.display = "none"; // hide search
+  updateAnalysis();
+}
+
 </script>
 </body>
 </html>
